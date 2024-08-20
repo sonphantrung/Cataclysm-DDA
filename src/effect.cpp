@@ -791,11 +791,7 @@ std::string effect::disp_name() const
         }
         ret += eff_type->name[0].translated();
         if( intensity > 1 && eff_type->show_intensity ) {
-            if( eff_type->id == effect_bandaged || eff_type->id == effect_disinfected ) {
-                ret += string_format( " [%s]", texitify_healing_power( intensity ) );
-            } else {
-                ret += string_format( " [%d]", intensity );
-            }
+            ret += string_format( " [%d]", intensity );
         }
     }
     if( bp != bodypart_str_id::NULL_ID() ) {
