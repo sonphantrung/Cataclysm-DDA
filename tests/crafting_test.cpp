@@ -439,7 +439,7 @@ static void prep_craft( const recipe_id &rid, const std::vector<item> &tools,
     clear_avatar();
     clear_map();
 
-    const tripoint test_origin( 60, 60, 0 );
+    const tripoint_bub_ms test_origin( 60, 60, 0 );
     Character &player_character = get_player_character();
     player_character.toggle_trait( trait_DEBUG_CNF );
     player_character.setpos( test_origin );
@@ -449,7 +449,7 @@ static void prep_craft( const recipe_id &rid, const std::vector<item> &tools,
         grant_profs_to_character( player_character, r );
     }
 
-    const tripoint battery_pos = test_origin + tripoint_north;
+    const tripoint_bub_ms battery_pos = test_origin + tripoint_north;
     std::optional<item> battery_item( "test_storage_battery" );
     place_appliance( battery_pos, vpart_ap_test_storage_battery, battery_item );
 
@@ -783,7 +783,7 @@ TEST_CASE( "UPS_modded_tools", "[crafting][ups]" )
     avatar dummy;
     clear_map();
     clear_character( dummy );
-    tripoint const test_loc = dummy.pos();
+    tripoint_bub_ms const test_loc = dummy.pos_bub();
     dummy.worn.wear_item( dummy, item( "backpack" ), false, false );
 
     item ups = GENERATE( item( "UPS_ON" ), item( "test_ups" ) );
@@ -2298,10 +2298,10 @@ TEST_CASE( "pseudo_tools_in_crafting_inventory", "[crafting][tools]" )
     clear_vehicles();
     clear_avatar();
     avatar &player = get_avatar();
-    player.setpos( tripoint( 60, 58, 0 ) );
-    const tripoint veh_pos( 60, 60, 0 );
-    const tripoint furn1_pos( 60, 57, 0 );
-    const tripoint furn2_pos( 60, 56, 0 );
+    player.setpos( tripoint_bub_ms( 60, 58, 0 ) );
+    const tripoint_bub_ms veh_pos( 60, 60, 0 );
+    const tripoint_bub_ms furn1_pos( 60, 57, 0 );
+    const tripoint_bub_ms furn2_pos( 60, 56, 0 );
 
     const itype_id pseudo_tool = furn_f_smoking_rack.obj().crafting_pseudo_item;
 
