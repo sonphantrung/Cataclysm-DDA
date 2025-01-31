@@ -7,12 +7,12 @@
 #   include "platform_win.h"
 #endif
 #   include "mmsystem.h"
-#elif defined(__APPLE__)
+#elif defined(SDL_PLATFORM_APPLE)
 #include <CoreFoundation/CFLocale.h>
 #include <CoreFoundation/CoreFoundation.h>
 #elif defined(__ANDROID__)
 #include <jni.h>
-#include "sdl_wrappers.h" // for SDL_AndroidGetJNIEnv()
+#include "sdl_wrappers.h" // for SDL_GetAndroidJNIEnv()
 #include "debug.h" // for DebugLog/D_INFO/D_MAIN
 #elif defined(__linux__)
 #include <langinfo.h>
@@ -89,7 +89,7 @@ std::optional<std::string> Language()
         }
     }
     return std::nullopt;
-#elif defined(__APPLE__)
+#elif defined(SDL_PLATFORM_APPLE)
     // Get the user's language list (in order of preference)
     CFArrayRef langs = CFLocaleCopyPreferredLanguages();
     if( CFArrayGetCount( langs ) == 0 ) {
@@ -128,8 +128,8 @@ std::optional<std::string> Language()
 
     return matchGameLanguage( lang_code );
 #elif defined(__ANDROID__)
-    JNIEnv *env = ( JNIEnv * )SDL_AndroidGetJNIEnv();
-    jobject activity = ( jobject )SDL_AndroidGetActivity();
+    JNIEnv *env = ( JNIEnv * )SDL_GetAndroidJNIEnv();
+    jobject activity = ( jobject )SDL_GetAndroidActivity();
     jclass clazz( env->GetObjectClass( activity ) );
     jmethodID method_id = env->GetMethodID( clazz, "getSystemLang", "()Ljava/lang/String;" );
     jstring ans = ( jstring )env->CallObjectMethod( activity, method_id, 0 );
@@ -174,7 +174,7 @@ std::optional<bool> UseMetricSystem()
     // measurementUnit == 0 => Metric System
     // measurementUnit == 1 => Imperial System
     return measurementUnit == 0;
-#elif defined(__APPLE__)
+#elif defined(SDL_PLATFORM_APPLE)
     CFLocaleRef localeRef = CFLocaleCopyCurrent();
     CFTypeRef useMetricSystem = CFLocaleGetValue( localeRef, kCFLocaleUsesMetricSystem );
     return static_cast<bool>( CFBooleanGetValue( static_cast<CFBooleanRef>( useMetricSystem ) ) );

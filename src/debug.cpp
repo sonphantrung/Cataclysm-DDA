@@ -1578,8 +1578,8 @@ std::string game_info::operating_system()
     return "Windows";
 #elif defined(__linux__)
     return "Linux";
-#elif defined(unix) || defined(__unix__) || defined(__unix) || ( defined(__APPLE__) && defined(__MACH__) ) // unix; BSD; MacOs
-#if defined(__APPLE__) && defined(__MACH__)
+#elif defined(unix) || defined(__unix__) || defined(__unix) || ( defined(SDL_PLATFORM_APPLE) && defined(__MACH__) ) // unix; BSD; MacOs
+#if defined(SDL_PLATFORM_APPLE) && defined(__MACH__)
     // The following include is **only** needed for the TARGET_xxx defines below and is only included if both of the above defines are true.
     // The whole function only relying on compiler defines, it is probably more meaningful to include it here and not mingle with the
     // headers at the top of the .cpp file.
@@ -1598,13 +1598,13 @@ std::string game_info::operating_system()
     return "BSD";
 #else
     return "Unix";
-#endif // __APPLE__
+#endif // SDL_PLATFORM_APPLE
 #else
     return "Unknown";
 #endif
 }
 
-#if !defined(EMSCRIPTEN) && !defined(__CYGWIN__) && !defined (__ANDROID__) && ( defined (__linux__) || defined(unix) || defined(__unix__) || defined(__unix) || ( defined(__APPLE__) && defined(__MACH__) ) || defined(CATA_IS_ON_BSD) ) // linux; unix; MacOs; BSD
+#if !defined(EMSCRIPTEN) && !defined(__CYGWIN__) && !defined (__ANDROID__) && ( defined (__linux__) || defined(unix) || defined(__unix__) || defined(__unix) || ( defined(SDL_PLATFORM_APPLE) && defined(__MACH__) ) || defined(CATA_IS_ON_BSD) ) // linux; unix; MacOs; BSD
 class FILEDeleter
 {
     public:
@@ -1720,7 +1720,7 @@ static std::string linux_version()
     return output;
 }
 
-#elif defined(__APPLE__) && defined(__MACH__) && !defined(CATA_IS_ON_BSD)
+#elif defined(SDL_PLATFORM_APPLE) && defined(__MACH__) && !defined(CATA_IS_ON_BSD)
 
 /** Get a precise version number for MacOs systems.
  * @note The code shells-out to call `sw_vers` with various options.
@@ -1867,7 +1867,7 @@ std::string game_info::operating_system_version()
     return bsd_version();
 #elif defined(__linux__)
     return linux_version();
-#elif defined(__APPLE__) && defined(__MACH__) && !defined(CATA_IS_ON_BSD)
+#elif defined(SDL_PLATFORM_APPLE) && defined(__MACH__) && !defined(CATA_IS_ON_BSD)
     return mac_os_version();
 #elif defined(_WIN32)
     return windows_version();

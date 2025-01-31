@@ -15,9 +15,9 @@
 #include <utility>
 
 #if defined(_MSC_VER) && defined(USE_VCPKG)
-#    include <SDL2/SDL_mixer.h>
+#    include <SDL3_mixer/SDL_mixer.h>
 #else
-#    include <SDL_mixer.h>
+#    include <SDL3_mixer/SDL_mixer.h>
 #endif
 
 #include "cached_options.h"
@@ -304,7 +304,7 @@ static bool check_sound( const int volume = 1 )
 bool init_sound()
 {
     int audio_rate = 44100;
-    Uint16 audio_format = AUDIO_S16;
+    Uint16 audio_format = SDL_AUDIO_S16LE;
     int audio_channels = 2;
     int audio_buffers = 2048;
 

@@ -19,7 +19,7 @@ class window;
 #include "sdl_wrappers.h"
 #include "string_id.h"
 
-#if defined(__APPLE__)
+#if defined(SDL_PLATFORM_APPLE)
 // For TARGET_OS_IPHONE macro to test if is on iOS
 #include <TargetConditionals.h>
 #endif

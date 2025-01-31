@@ -20,7 +20,7 @@
 #include "viewer.h"
 
 #if defined(__ANDROID__)
-#include <SDL_keyboard.h>
+#include <SDL3/SDL_keyboard.h>
 #endif
 #include <algorithm>
 #include <deque>

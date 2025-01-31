@@ -20,7 +20,7 @@
 // Dont't remove `format off`, it prevent reordering of win-includes.
 
 #if defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__) || \
-    defined(__QNXNTO__)
+    defined(SDL_PLATFORM_QNXNTO)
 // No pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wunused-macros"
 #  define _POSIX_C_SOURCE 200809L

@@ -88,7 +88,7 @@ static const trait_id trait_DEBUG_CLAIRVOYANCE( "DEBUG_CLAIRVOYANCE" );
 static const trait_id trait_DEBUG_NIGHTVISION( "DEBUG_NIGHTVISION" );
 
 #if defined(__ANDROID__)
-#include <SDL_keyboard.h>
+#include <SDL3/SDL_keyboard.h>
 #endif
 
 static constexpr int UILIST_MAP_NOTE_DELETED = -2047;

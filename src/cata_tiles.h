@@ -131,13 +131,13 @@ class texture
         std::pair<int, int> dimension() const {
             return std::make_pair( srcrect.w, srcrect.h );
         }
-        /// Interface to @ref SDL_RenderCopyEx, using this as the texture, and
+        /// Interface to @ref SDL_RenderTextureRotated, using this as the texture, and
         /// null as source rectangle (render the whole texture). Other parameters
         /// are simply passed through.
         int render_copy_ex( const SDL_Renderer_Ptr &renderer, const SDL_Rect *const dstrect,
                             const double angle,
-                            const SDL_Point *const center, const SDL_RendererFlip flip ) const {
-            return SDL_RenderCopyEx( renderer.get(), sdl_texture_ptr.get(), &srcrect, dstrect, angle, center,
+                            const SDL_Point *const center, const SDL_FlipMode flip ) const {
+            return SDL_RenderTextureRotated( renderer.get(), sdl_texture_ptr.get(), &srcrect, dstrect, angle, center,
                                      flip );
         }
 };

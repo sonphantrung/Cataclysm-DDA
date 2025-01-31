@@ -511,8 +511,8 @@ void tileset_cache::loader::load_tileset( const cata_path &img_path, const bool 
 
     if( R >= 0 && R <= 255 && G >= 0 && G <= 255 && B >= 0 && B <= 255 ) {
         const Uint32 key = SDL_MapRGB( tile_atlas->format, 0, 0, 0 );
-        throwErrorIf( SDL_SetColorKey( tile_atlas.get(), SDL_TRUE, key ) != 0,
-                      "SDL_SetColorKey failed" );
+        throwErrorIf( SDL_SetSurfaceColorKey( tile_atlas.get(), true, key ) != 0,
+                      "SDL_SetSurfaceColorKey failed" );
         throwErrorIf( SDL_SetSurfaceRLE( tile_atlas.get(), 1 ), "SDL_SetSurfaceRLE failed" );
     }
 
@@ -1324,8 +1324,8 @@ void cata_tiles::draw( const point &dest, const tripoint_bub_ms &center, int wid
     {
         //set clipping to prevent drawing over stuff we shouldn't
         SDL_Rect clipRect = {dest.x, dest.y, width, height};
-        printErrorIf( SDL_RenderSetClipRect( renderer.get(), &clipRect ) != 0,
-                      "SDL_RenderSetClipRect failed" );
+        printErrorIf( SDL_SetRenderClipRect( renderer.get(), &clipRect ) != 0,
+                      "SDL_SetRenderClipRect failed" );
 
         //fill render area with black to prevent artifacts where no new pixels are drawn
         geometry->rect( renderer, clipRect, SDL_Color() );
@@ -1953,8 +1953,8 @@ void cata_tiles::draw( const point &dest, const tripoint_bub_ms &center, int wid
         }
     }
 
-    printErrorIf( SDL_RenderSetClipRect( renderer.get(), nullptr ) != 0,
-                  "SDL_RenderSetClipRect failed" );
+    printErrorIf( SDL_SetRenderClipRect( renderer.get(), nullptr ) != 0,
+                  "SDL_SetRenderClipRect failed" );
 }
 
 void cata_tiles::set_draw_cache_dirty()
@@ -3060,7 +3060,7 @@ bool cata_tiles::draw_sprite_at(
             // flip horizontally
             ret = sprite_tex->render_copy_ex(
                       renderer, &destination, 0, nullptr,
-                      static_cast<SDL_RendererFlip>( SDL_FLIP_HORIZONTAL ) );
+                      static_cast<SDL_FlipMode>( SDL_FLIP_HORIZONTAL ) );
         } else {
             switch( rota % 4 ) {
                 default:
@@ -3093,7 +3093,7 @@ bool cata_tiles::draw_sprite_at(
                         // never flip isometric tiles vertically
                         ret = sprite_tex->render_copy_ex(
                                   renderer, &destination, 0, nullptr,
-                                  static_cast<SDL_RendererFlip>( SDL_FLIP_HORIZONTAL | SDL_FLIP_VERTICAL ) );
+                                  static_cast<SDL_FlipMode>( SDL_FLIP_HORIZONTAL | SDL_FLIP_VERTICAL ) );
                     } else {
                         ret = sprite_tex->render_copy_ex( renderer, &destination, 0, nullptr,
                                                           SDL_FLIP_NONE );
@@ -3124,7 +3124,7 @@ bool cata_tiles::draw_sprite_at(
         ret = sprite_tex->render_copy_ex( renderer, &destination, 0, nullptr, SDL_FLIP_NONE );
     }
 
-    printErrorIf( ret != 0, "SDL_RenderCopyEx() failed" );
+    printErrorIf( ret != 0, "SDL_RenderTextureRotated() failed" );
     // this reference passes all the way back up the call chain back to
     // cata_tiles::draw() here.draw_points_cache[z][row][col].com.height_3d
     // where we are accumulating the height of every sprite stacked up in a tile
@@ -4476,8 +4476,8 @@ void tileset_cache::loader::ensure_default_item_highlight()
 
     const SDL_Surface_Ptr surface = create_surface_32( ts.tile_width, ts.tile_height );
     cata_assert( surface );
-    throwErrorIf( SDL_FillRect( surface.get(), nullptr, SDL_MapRGBA( surface->format, 0, 0, 127,
-                                highlight_alpha ) ) != 0, "SDL_FillRect failed" );
+    throwErrorIf( SDL_FillSurfaceRect( surface.get(), nullptr, SDL_MapRGBA( surface->format, 0, 0, 127,
+                                highlight_alpha ) ) != 0, "SDL_FillSurfaceRect failed" );
     ts.tile_values.emplace_back( CreateTextureFromSurface( renderer, surface ),
                                  SDL_Rect{ 0, 0, ts.tile_width, ts.tile_height } );
     ts.tile_ids[ITEM_HIGHLIGHT].fg.add( std::vector<int>( {index} ), 1 );

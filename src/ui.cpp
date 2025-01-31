@@ -27,7 +27,7 @@
 
 #if defined(__ANDROID__)
 #include <jni.h>
-#include <SDL_keyboard.h>
+#include <SDL3/SDL_keyboard.h>
 
 #include "options.h"
 #endif
@@ -865,8 +865,8 @@ void uilist::query( bool loop, int timeout, bool allow_unfiltered_hotkeys )
             calc_data();
             started = true;
         }
-        JNIEnv *env = ( JNIEnv * )SDL_AndroidGetJNIEnv();
-        jobject activity = ( jobject )SDL_AndroidGetActivity();
+        JNIEnv *env = ( JNIEnv * )SDL_GetAndroidJNIEnv();
+        jobject activity = ( jobject )SDL_GetAndroidActivity();
         jclass clazz( env->GetObjectClass( activity ) );
         jmethodID get_nativeui_method_id = env->GetMethodID( clazz, "getNativeUI",
                                            "()Lcom/cleverraven/cataclysmdda/NativeUI;" );

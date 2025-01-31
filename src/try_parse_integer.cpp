@@ -13,7 +13,7 @@ ret_val<T> try_parse_integer( const std::string_view s, bool use_locale )
     // std::from_chars and std::strto* functions, but this should be fine so
     // long as the code is not performance-critical.
     std::istringstream buffer{ std::string( s ) };
-#ifdef __APPLE__
+#ifdef SDL_PLATFORM_APPLE
     // On Apple platforms we always use the classic locale, because the other
     // locales seem to behave strangely.  See
     // https://github.com/CleverRaven/Cataclysm-DDA/pull/48431 for more

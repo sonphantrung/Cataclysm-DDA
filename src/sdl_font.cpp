@@ -316,7 +316,7 @@ SDL_Texture_Ptr CachedTTFFont::create_glyph( const SDL_Renderer_Ptr &renderer,
     const int wf = utf8_width( ch );
     ch_width = width * wf;
     // Note: bits per pixel must be 8 to be synchronized with the surface
-    // that TTF_RenderGlyph above returns. This is important for SDL_BlitScaled
+    // that TTF_RenderGlyph above returns. This is important for SDL_BlitSurfaceScaled
     SDL_Surface_Ptr surface = create_surface_32( ch_width, height );
     SDL_Rect src_rect = { 0, 0, sglyph->w, sglyph->h };
     SDL_Rect dst_rect = { 0, 0, ch_width, height };
@@ -401,7 +401,7 @@ BitmapFont::BitmapFont(
         throw std::runtime_error( "bitmap for font is to small" );
     }
     Uint32 key = SDL_MapRGB( asciiload->format, 0xFF, 0, 0xFF );
-    SDL_SetColorKey( asciiload.get(), SDL_TRUE, key );
+    SDL_SetSurfaceColorKey( asciiload.get(), true, key );
     std::array<SDL_Surface_Ptr, std::tuple_size<decltype( ascii )>::value> ascii_surf;
     ascii_surf[0].reset( SDL_ConvertSurface( asciiload.get(), format.get(), 0 ) );
     SDL_SetSurfaceRLE( ascii_surf[0].get(), 1 );

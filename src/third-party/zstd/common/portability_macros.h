@@ -68,7 +68,7 @@
 /* Mark the internal assembly functions as hidden  */
 #ifdef __ELF__
 # define ZSTD_HIDE_ASM_FUNCTION(func) .hidden func
-#elif defined(__APPLE__)
+#elif defined(SDL_PLATFORM_APPLE)
 # define ZSTD_HIDE_ASM_FUNCTION(func) .private_extern func
 #else
 # define ZSTD_HIDE_ASM_FUNCTION(func)
@@ -101,7 +101,7 @@
  * 100% of code to be instrumented to work.
  */
 #if defined(__GNUC__)
-#  if defined(__linux__) || defined(__linux) || defined(__APPLE__)
+#  if defined(__linux__) || defined(__linux) || defined(SDL_PLATFORM_APPLE)
 #    if ZSTD_MEMORY_SANITIZER
 #      define ZSTD_ASM_SUPPORTED 0
 #    elif ZSTD_DATAFLOW_SANITIZER

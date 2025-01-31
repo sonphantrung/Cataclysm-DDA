@@ -11,9 +11,9 @@
 #include "point.h"
 
 #if defined(_MSC_VER) && defined(USE_VCPKG)
-#   include <SDL2/SDL_image.h>
+#   include <SDL3_image/SDL_image.h>
 #else
-#   include <SDL_image.h>
+#   include <SDL3_image/SDL_image.h>
 #endif
 
 #define dbg(x) DebugLog((x),D_SDL) << __FILE__ << ":" << __LINE__ << ": "
@@ -48,8 +48,8 @@ void RenderCopy( const SDL_Renderer_Ptr &renderer, const SDL_Texture_Ptr &textur
         dbg( D_ERROR ) << "Tried to render a null texture";
         return;
     }
-    printErrorIf( SDL_RenderCopy( renderer.get(), texture.get(), srcrect, dstrect ) != 0,
-                  "SDL_RenderCopy failed" );
+    printErrorIf( SDL_RenderTexture( renderer.get(), texture.get(), srcrect, dstrect ) != 0,
+                  "SDL_RenderTexture failed" );
 }
 
 SDL_Texture_Ptr CreateTexture( const SDL_Renderer_Ptr &renderer, Uint32 format, int access,
@@ -93,7 +93,7 @@ void SetRenderDrawColor( const SDL_Renderer_Ptr &renderer, const Uint8 r, const 
 
 void RenderDrawPoint( const SDL_Renderer_Ptr &renderer, const point &p )
 {
-    printErrorIf( SDL_RenderDrawPoint( renderer.get(), p.x, p.y ) != 0, "SDL_RenderDrawPoint failed" );
+    printErrorIf( SDL_RenderPoint( renderer.get(), p.x, p.y ) != 0, "SDL_RenderPoint failed" );
 }
 
 void RenderFillRect( const SDL_Renderer_Ptr &renderer, const SDL_Rect *const rect )
@@ -111,7 +111,7 @@ void FillRect( const SDL_Surface_Ptr &surface, const SDL_Rect *const rect, Uint3
         dbg( D_ERROR ) << "Tried to use a null surface";
         return;
     }
-    printErrorIf( SDL_FillRect( surface.get(), rect, color ) != 0, "SDL_FillRect failed" );
+    printErrorIf( SDL_FillSurfaceRect( surface.get(), rect, color ) != 0, "SDL_FillSurfaceRect failed" );
 }
 
 void SetTextureBlendMode( const SDL_Texture_Ptr &texture, SDL_BlendMode blendMode )

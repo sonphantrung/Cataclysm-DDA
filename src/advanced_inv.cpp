@@ -69,7 +69,7 @@
 #include "vehicle.h"
 
 #if defined(__ANDROID__)
-#   include <SDL_keyboard.h>
+#   include <SDL3/SDL_keyboard.h>
 #endif
 
 static const flag_id json_flag_NO_RELOAD( "NO_RELOAD" );

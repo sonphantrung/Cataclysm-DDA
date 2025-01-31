@@ -7,7 +7,7 @@
 #include "imtui-impl-ncurses.h"
 
 #define NCURSES_NOMACROS
-#if !defined(__APPLE__)
+#if !defined(SDL_PLATFORM_APPLE)
 #define NCURSES_WIDECHAR 1
 #endif
 

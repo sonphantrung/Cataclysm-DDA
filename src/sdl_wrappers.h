@@ -7,16 +7,16 @@
 #endif
 // IWYU pragma: begin_exports
 #if defined(_MSC_VER) && defined(USE_VCPKG)
-#   include <SDL2/SDL.h>
-#   include <SDL2/SDL_image.h>
-#   include <SDL2/SDL_ttf.h>
+#   include <SDL3/SDL.h>
+#   include <SDL3_image/SDL_image.h>
+#   include <SDL3_ttf/SDL_ttf.h>
 #else
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
-#   include <SDL.h>
+#   include <SDL3/SDL.h>
 #pragma GCC diagnostic pop
-#   include <SDL_image.h>
-#   include <SDL_ttf.h>
+#   include <SDL3_image/SDL_image.h>
+#   include <SDL3_ttf/SDL_ttf.h>
 #endif
 // IWYU pragma: end_exports
 
@@ -54,7 +54,7 @@ using SDL_Texture_Ptr = std::unique_ptr<SDL_Texture, SDL_Texture_deleter>;
 
 struct SDL_Surface_deleter {
     void operator()( SDL_Surface *const ptr ) {
-        SDL_FreeSurface( ptr );
+        SDL_DestroySurface( ptr );
     }
 };
 using SDL_Surface_Ptr = std::unique_ptr<SDL_Surface, SDL_Surface_deleter>;

@@ -6,7 +6,7 @@
 #include "input.h"
 #include "sdl_wrappers.h"
 
-#define SDL_GAMEPAD_SCHEDULER (SDL_USEREVENT+1)
+#define SDL_GAMEPAD_SCHEDULER (SDL_EVENT_USER+1)
 
 extern input_event last_input;
 
@@ -18,7 +18,7 @@ void quit();
 void handle_axis_event( SDL_Event &event );
 void handle_button_event( SDL_Event &event );
 void handle_scheduler_event( SDL_Event &event );
-SDL_GameController *get_controller();
+SDL_Gamepad *get_controller();
 
 } // namespace gamepad
 

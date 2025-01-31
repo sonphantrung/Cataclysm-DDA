@@ -13,12 +13,12 @@ static constexpr int max_sticks = 2;
 static constexpr int max_buttons = 30;
 
 static std::array<int, max_triggers> triggers_axis = {
-    SDL_CONTROLLER_AXIS_TRIGGERLEFT,
-    SDL_CONTROLLER_AXIS_TRIGGERRIGHT
+    SDL_GAMEPAD_AXIS_LEFT_TRIGGER,
+    SDL_GAMEPAD_AXIS_RIGHT_TRIGGER
 };
 static std::array<std::array<int, 2>, max_sticks> sticks_axis = { {
-        { {SDL_CONTROLLER_AXIS_LEFTX,  SDL_CONTROLLER_AXIS_LEFTY}  },
-        { {SDL_CONTROLLER_AXIS_RIGHTX, SDL_CONTROLLER_AXIS_RIGHTY} }
+        { {SDL_GAMEPAD_AXIS_LEFTX,  SDL_GAMEPAD_AXIS_LEFTY}  },
+        { {SDL_GAMEPAD_AXIS_RIGHTX, SDL_GAMEPAD_AXIS_RIGHTY} }
     }
 };
 
@@ -53,7 +53,7 @@ static int diagonal_detect_delay = 250;
 
 // SDL related stuff
 static SDL_TimerID timer_id;
-static SDL_GameController *controller = nullptr;
+static SDL_Gamepad *controller = nullptr;
 
 static Uint32 timer_func( Uint32 interval, void * )
 {
@@ -104,7 +104,7 @@ void init()
         task.counter = 0;
     }
 
-    int ret = SDL_Init( SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER );
+    int ret = SDL_Init( SDL_INIT_TIMER | SDL_INIT_GAMEPAD );
     if( ret < 0 ) {
         printErrorIf( ret != 0, "Init gamecontroller+timer failed" );
         return;
@@ -115,8 +115,8 @@ void init()
             dbg( D_WARNING ) <<
                              "You have more than one gamepads/joysticks plugged in, only the first will be used.";
         }
-        controller = SDL_GameControllerOpen( 0 );
-        printErrorIf( controller == nullptr, "SDL_GameControllerOpen failed" );
+        controller = SDL_OpenGamepad( 0 );
+        printErrorIf( controller == nullptr, "SDL_OpenGamepad failed" );
         if( controller ) {
             printErrorIf( SDL_GameControllerEventState( SDL_ENABLE ) < 0,
                           "SDL_GameControllerEventState(SDL_ENABLE) failed" );
@@ -137,12 +137,12 @@ void quit()
         timer_id = 0;
     }
     if( controller ) {
-        SDL_GameControllerClose( controller );
+        SDL_CloseGamepad( controller );
         controller = nullptr;
     }
 }
 
-SDL_GameController *get_controller()
+SDL_Gamepad *get_controller()
 {
     return controller;
 }
@@ -221,7 +221,7 @@ static void dpad_changes( task_t &task, const std::array<int, 16> &m, Uint32 now
 
 void handle_axis_event( SDL_Event &event )
 {
-    if( event.type != SDL_CONTROLLERAXISMOTION ) {
+    if( event.type != SDL_EVENT_GAMEPAD_AXIS_MOTION ) {
         return;
     }
 
@@ -287,30 +287,30 @@ void handle_axis_event( SDL_Event &event )
 void handle_button_event( SDL_Event &event )
 {
     switch( event.type ) {
-        case SDL_CONTROLLERBUTTONDOWN:
-        case SDL_CONTROLLERBUTTONUP: {
+        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+        case SDL_EVENT_GAMEPAD_BUTTON_UP: {
             int button = event.cbutton.button;
             int state = event.cbutton.state;
             Uint32 now = event.cbutton.timestamp;
             task_t &task = all_tasks[button];
             if( state ) {
                 switch( button ) {
-                    case SDL_CONTROLLER_BUTTON_BACK:    // BACK -> Escape
+                    case SDL_GAMEPAD_BUTTON_BACK:    // BACK -> Escape
                         send_input( KEY_ESCAPE, input_event_t::keyboard_code );
                         break;
-                    case SDL_CONTROLLER_BUTTON_START:   // START -> Enter
+                    case SDL_GAMEPAD_BUTTON_START:   // START -> Enter
                         send_input( '\n', input_event_t::keyboard_char );
                         break;
-                    case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                    case SDL_GAMEPAD_BUTTON_DPAD_UP:
                         send_input( KEY_UP, input_event_t::keyboard_char );
                         break;
-                    case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                    case SDL_GAMEPAD_BUTTON_DPAD_DOWN:
                         send_input( KEY_DOWN, input_event_t::keyboard_char );
                         break;
-                    case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                    case SDL_GAMEPAD_BUTTON_DPAD_LEFT:
                         send_input( KEY_LEFT, input_event_t::keyboard_char );
                         break;
-                    case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                    case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
                         send_input( KEY_RIGHT, input_event_t::keyboard_char );
                         break;
                     default:

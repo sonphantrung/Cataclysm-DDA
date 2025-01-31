@@ -4099,7 +4099,7 @@ XXH_vmlal_high_u32(uint64x2_t acc, uint32x4_t lhs, uint32x4_t rhs)
  */
 # ifndef XXH3_NEON_LANES
 #  if (defined(__aarch64__) || defined(__arm64__) || defined(_M_ARM64) || defined(_M_ARM64EC)) \
-   && !defined(__APPLE__) && XXH_SIZE_OPT <= 0
+   && !defined(SDL_PLATFORM_APPLE) && XXH_SIZE_OPT <= 0
 #   define XXH3_NEON_LANES 6
 #  else
 #   define XXH3_NEON_LANES XXH_ACC_NB

@@ -41,22 +41,22 @@
 //  2023-02-07: *BREAKING CHANGE* Renamed this backend file from imgui_impl_sdl.cpp/.h to imgui_impl_sdl2.cpp/.h in prevision for the future release of SDL3.
 //  2023-02-02: Avoid calling SDL_SetCursor() when cursor has not changed, as the function is surprisingly costly on Mac with latest SDL (may be fixed in next SDL version).
 //  2023-02-02: Added support for SDL 2.0.18+ preciseX/preciseY mouse wheel data for smooth scrolling + Scaling X value on Emscripten (bug?). (#4019, #6096)
-//  2023-02-02: Removed SDL_MOUSEWHEEL value clamping, as values seem correct in latest Emscripten. (#4019)
-//  2023-02-01: Flipping SDL_MOUSEWHEEL 'wheel.x' value to match other backends and offer consistent horizontal scrolling direction. (#4019, #6096, #1463)
+//  2023-02-02: Removed SDL_EVENT_MOUSE_WHEEL value clamping, as values seem correct in latest Emscripten. (#4019)
+//  2023-02-01: Flipping SDL_EVENT_MOUSE_WHEEL 'wheel.x' value to match other backends and offer consistent horizontal scrolling direction. (#4019, #6096, #1463)
 //  2022-10-11: Using 'nullptr' instead of 'NULL' as per our switch to C++11.
 //  2022-09-26: Inputs: Disable SDL 2.0.22 new "auto capture" (SDL_HINT_MOUSE_AUTO_CAPTURE) which prevents drag and drop across windows for multi-viewport support + don't capture when drag and dropping. (#5710)
 //  2022-09-26: Inputs: Renamed ImGuiKey_ModXXX introduced in 1.87 to ImGuiMod_XXX (old names still supported).
 //  2022-03-22: Inputs: Fix mouse position issues when dragging outside of boundaries. SDL_CaptureMouse() erroneously still gives out LEAVE events when hovering OS decorations.
 //  2022-03-22: Inputs: Added support for extra mouse buttons (SDL_BUTTON_X1/SDL_BUTTON_X2).
-//  2022-02-04: Added SDL_Renderer* parameter to ImGui_ImplSDL2_InitForSDLRenderer(), so we can use SDL_GetRendererOutputSize() instead of SDL_GL_GetDrawableSize() when bound to a SDL_Renderer.
+//  2022-02-04: Added SDL_Renderer* parameter to ImGui_ImplSDL2_InitForSDLRenderer(), so we can use SDL_GetCurrentRenderOutputSize() instead of SDL_GL_GetDrawableSize() when bound to a SDL_Renderer.
 //  2022-01-26: Inputs: replaced short-lived io.AddKeyModsEvent() (added two weeks ago) with io.AddKeyEvent() using ImGuiKey_ModXXX flags. Sorry for the confusion.
 //  2021-01-20: Inputs: calling new io.AddKeyAnalogEvent() for gamepad support, instead of writing directly to io.NavInputs[].
 //  2022-01-17: Inputs: calling new io.AddMousePosEvent(), io.AddMouseButtonEvent(), io.AddMouseWheelEvent() API (1.87+).
 //  2022-01-17: Inputs: always update key mods next and before key event (not in NewFrame) to fix input queue with very low framerates.
-//  2022-01-12: Update mouse inputs using SDL_MOUSEMOTION/SDL_WINDOWEVENT_LEAVE + fallback to provide it when focused but not hovered/captured. More standard and will allow us to pass it to future input queue API.
+//  2022-01-12: Update mouse inputs using SDL_EVENT_MOUSE_MOTION/SDL_EVENT_WINDOW_MOUSE_LEAVE + fallback to provide it when focused but not hovered/captured. More standard and will allow us to pass it to future input queue API.
 //  2022-01-12: Maintain our own copy of MouseButtonsDown mask instead of using ImGui::IsAnyMouseDown() which will be obsoleted.
 //  2022-01-10: Inputs: calling new io.AddKeyEvent(), io.AddKeyModsEvent() + io.SetKeyEventNativeData() API (1.87+). Support for full ImGuiKey range.
-//  2021-08-17: Calling io.AddFocusEvent() on SDL_WINDOWEVENT_FOCUS_GAINED/SDL_WINDOWEVENT_FOCUS_LOST.
+//  2021-08-17: Calling io.AddFocusEvent() on SDL_EVENT_WINDOW_FOCUS_GAINED/SDL_EVENT_WINDOW_FOCUS_LOST.
 //  2021-07-29: Inputs: MousePos is correctly reported when the host platform window is hovered but not focused (using SDL_GetMouseFocus() + SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, requires SDL 2.0.5+)
 //  2021-06-29: *BREAKING CHANGE* Removed 'SDL_Window* window' parameter to ImGui_ImplSDL2_NewFrame() which was unnecessary.
 //  2021-06-29: Reorganized backend to pull data from a single structure to facilitate usage with multiple-contexts (all g_XXXX access changed to bd->XXXX).
@@ -66,7 +66,7 @@
 //  2019-12-17: Inputs: On Wayland, use SDL_GetMouseState (because there is no global mouse state).
 //  2019-12-05: Inputs: Added support for ImGuiMouseCursor_NotAllowed mouse cursor.
 //  2019-07-21: Inputs: Added mapping for ImGuiKey_KeyPadEnter.
-//  2019-04-23: Inputs: Added support for SDL_GameController (if ImGuiConfigFlags_NavEnableGamepad is set by user application).
+//  2019-04-23: Inputs: Added support for SDL_Gamepad (if ImGuiConfigFlags_NavEnableGamepad is set by user application).
 //  2019-03-12: Misc: Preserve DisplayFramebufferScale when main window is minimized.
 //  2018-12-21: Inputs: Workaround for Android/iOS which don't seem to handle focus related calls.
 //  2018-11-30: Misc: Setting up io.BackendPlatformName so it can be displayed in the About Window.
@@ -102,30 +102,30 @@ float y_scale = 1.f;
 
 // SDL
 #if defined(_MSC_VER) && defined(USE_VCPKG)
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_syswm.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_syswm.h>
 #else
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #pragma GCC diagnostic pop
-#include <SDL_syswm.h>
+#include <SDL3/SDL_syswm.h>
 #endif
-#ifdef __APPLE__
+#ifdef SDL_PLATFORM_APPLE
 #include <TargetConditionals.h>
 #endif
 #ifdef __EMSCRIPTEN__
 #include <emscripten/em_js.h>
 #endif
 
-#if SDL_VERSION_ATLEAST(2,0,4) && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__) && !(defined(__APPLE__) && TARGET_OS_IOS) && !defined(__amigaos4__)
+#if SDL_VERSION_ATLEAST(2,0,4) && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__) && !(defined(SDL_PLATFORM_APPLE) && TARGET_OS_IOS) && !defined(__amigaos4__)
 #define SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE    1
 #else
 #define SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE    0
 #endif
 //#define SDL_HAS_VULKAN                      SDL_VERSION_ATLEAST(2,0,6)
 #if SDL_HAS_VULKAN
-#include <SDL_vulkan.h>
+#include <SDL3/SDL_vulkan.h>
 #endif
 
 // SDL Data
@@ -146,7 +146,7 @@ struct ImGui_ImplSDL2_Data
     bool                    MouseCanUseGlobalState;
 
     // Gamepad handling
-    ImVector<SDL_GameController*> Gamepads;
+    ImVector<SDL_Gamepad*> Gamepads;
     ImGui_ImplSDL2_GamepadMode    GamepadMode;
     bool                          WantUpdateGamepadsList;
 
@@ -213,7 +213,7 @@ ImGuiKey ImGui_ImplSDL2_KeyEventToImGuiKey(SDL_Keycode keycode, SDL_Scancode sca
         case SDLK_SPACE: return ImGuiKey_Space;
         case SDLK_RETURN: return ImGuiKey_Enter;
         case SDLK_ESCAPE: return ImGuiKey_Escape;
-        case SDLK_QUOTE: return ImGuiKey_Apostrophe;
+        case SDLK_APOSTROPHE: return ImGuiKey_Apostrophe;
         case SDLK_COMMA: return ImGuiKey_Comma;
         case SDLK_MINUS: return ImGuiKey_Minus;
         case SDLK_PERIOD: return ImGuiKey_Period;
@@ -223,7 +223,7 @@ ImGuiKey ImGui_ImplSDL2_KeyEventToImGuiKey(SDL_Keycode keycode, SDL_Scancode sca
         case SDLK_LEFTBRACKET: return ImGuiKey_LeftBracket;
         case SDLK_BACKSLASH: return ImGuiKey_Backslash;
         case SDLK_RIGHTBRACKET: return ImGuiKey_RightBracket;
-        case SDLK_BACKQUOTE: return ImGuiKey_GraveAccent;
+        case SDLK_GRAVE: return ImGuiKey_GraveAccent;
         case SDLK_CAPSLOCK: return ImGuiKey_CapsLock;
         case SDLK_SCROLLLOCK: return ImGuiKey_ScrollLock;
         case SDLK_NUMLOCKCLEAR: return ImGuiKey_NumLock;
@@ -265,32 +265,32 @@ ImGuiKey ImGui_ImplSDL2_KeyEventToImGuiKey(SDL_Keycode keycode, SDL_Scancode sca
         case SDLK_7: return ImGuiKey_7;
         case SDLK_8: return ImGuiKey_8;
         case SDLK_9: return ImGuiKey_9;
-        case SDLK_a: return ImGuiKey_A;
-        case SDLK_b: return ImGuiKey_B;
-        case SDLK_c: return ImGuiKey_C;
-        case SDLK_d: return ImGuiKey_D;
-        case SDLK_e: return ImGuiKey_E;
-        case SDLK_f: return ImGuiKey_F;
-        case SDLK_g: return ImGuiKey_G;
-        case SDLK_h: return ImGuiKey_H;
-        case SDLK_i: return ImGuiKey_I;
-        case SDLK_j: return ImGuiKey_J;
-        case SDLK_k: return ImGuiKey_K;
-        case SDLK_l: return ImGuiKey_L;
-        case SDLK_m: return ImGuiKey_M;
-        case SDLK_n: return ImGuiKey_N;
-        case SDLK_o: return ImGuiKey_O;
-        case SDLK_p: return ImGuiKey_P;
-        case SDLK_q: return ImGuiKey_Q;
-        case SDLK_r: return ImGuiKey_R;
-        case SDLK_s: return ImGuiKey_S;
-        case SDLK_t: return ImGuiKey_T;
-        case SDLK_u: return ImGuiKey_U;
-        case SDLK_v: return ImGuiKey_V;
-        case SDLK_w: return ImGuiKey_W;
-        case SDLK_x: return ImGuiKey_X;
-        case SDLK_y: return ImGuiKey_Y;
-        case SDLK_z: return ImGuiKey_Z;
+        case SDLK_A: return ImGuiKey_A;
+        case SDLK_B: return ImGuiKey_B;
+        case SDLK_C: return ImGuiKey_C;
+        case SDLK_D: return ImGuiKey_D;
+        case SDLK_E: return ImGuiKey_E;
+        case SDLK_F: return ImGuiKey_F;
+        case SDLK_G: return ImGuiKey_G;
+        case SDLK_H: return ImGuiKey_H;
+        case SDLK_I: return ImGuiKey_I;
+        case SDLK_J: return ImGuiKey_J;
+        case SDLK_K: return ImGuiKey_K;
+        case SDLK_L: return ImGuiKey_L;
+        case SDLK_M: return ImGuiKey_M;
+        case SDLK_N: return ImGuiKey_N;
+        case SDLK_O: return ImGuiKey_O;
+        case SDLK_P: return ImGuiKey_P;
+        case SDLK_Q: return ImGuiKey_Q;
+        case SDLK_R: return ImGuiKey_R;
+        case SDLK_S: return ImGuiKey_S;
+        case SDLK_T: return ImGuiKey_T;
+        case SDLK_U: return ImGuiKey_U;
+        case SDLK_V: return ImGuiKey_V;
+        case SDLK_W: return ImGuiKey_W;
+        case SDLK_X: return ImGuiKey_X;
+        case SDLK_Y: return ImGuiKey_Y;
+        case SDLK_Z: return ImGuiKey_Z;
         case SDLK_F1: return ImGuiKey_F1;
         case SDLK_F2: return ImGuiKey_F2;
         case SDLK_F3: return ImGuiKey_F3;
@@ -325,10 +325,10 @@ ImGuiKey ImGui_ImplSDL2_KeyEventToImGuiKey(SDL_Keycode keycode, SDL_Scancode sca
 static void ImGui_ImplSDL2_UpdateKeyModifiers(SDL_Keymod sdl_key_mods)
 {
     ImGuiIO& io = ImGui::GetIO();
-    io.AddKeyEvent(ImGuiMod_Ctrl, (sdl_key_mods & KMOD_CTRL) != 0);
-    io.AddKeyEvent(ImGuiMod_Shift, (sdl_key_mods & KMOD_SHIFT) != 0);
-    io.AddKeyEvent(ImGuiMod_Alt, (sdl_key_mods & KMOD_ALT) != 0);
-    io.AddKeyEvent(ImGuiMod_Super, (sdl_key_mods & KMOD_GUI) != 0);
+    io.AddKeyEvent(ImGuiMod_Ctrl, (sdl_key_mods & SDL_KMOD_CTRL) != 0);
+    io.AddKeyEvent(ImGuiMod_Shift, (sdl_key_mods & SDL_KMOD_SHIFT) != 0);
+    io.AddKeyEvent(ImGuiMod_Alt, (sdl_key_mods & SDL_KMOD_ALT) != 0);
+    io.AddKeyEvent(ImGuiMod_Super, (sdl_key_mods & SDL_KMOD_GUI) != 0);
 }
 
 static ImGuiViewport* ImGui_ImplSDL2_GetViewportForWindowID(Uint32 window_id)
@@ -350,7 +350,7 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
 
     switch (event->type)
     {
-        case SDL_MOUSEMOTION:
+        case SDL_EVENT_MOUSE_MOTION:
         {
             if (ImGui_ImplSDL2_GetViewportForWindowID(event->motion.windowID) == NULL)
                 return false;
@@ -359,7 +359,7 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
             io.AddMousePosEvent(mouse_pos.x * x_scale, mouse_pos.y * y_scale);
             return true;
         }
-        case SDL_MOUSEWHEEL:
+        case SDL_EVENT_MOUSE_WHEEL:
         {
             if (ImGui_ImplSDL2_GetViewportForWindowID(event->wheel.windowID) == NULL)
                 return false;
@@ -378,8 +378,8 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
             io.AddMouseWheelEvent(wheel_x, wheel_y);
             return true;
         }
-        case SDL_MOUSEBUTTONDOWN:
-        case SDL_MOUSEBUTTONUP:
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
         {
             if (ImGui_ImplSDL2_GetViewportForWindowID(event->button.windowID) == NULL)
                 return false;
@@ -392,11 +392,11 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
             if (mouse_button == -1)
                 break;
             io.AddMouseSourceEvent(event->button.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
-            io.AddMouseButtonEvent(mouse_button, (event->type == SDL_MOUSEBUTTONDOWN));
-            bd->MouseButtonsDown = (event->type == SDL_MOUSEBUTTONDOWN) ? (bd->MouseButtonsDown | (1 << mouse_button)) : (bd->MouseButtonsDown & ~(1 << mouse_button));
+            io.AddMouseButtonEvent(mouse_button, (event->type == SDL_EVENT_MOUSE_BUTTON_DOWN));
+            bd->MouseButtonsDown = (event->type == SDL_EVENT_MOUSE_BUTTON_DOWN) ? (bd->MouseButtonsDown | (1 << mouse_button)) : (bd->MouseButtonsDown & ~(1 << mouse_button));
             return true;
         }
-        case SDL_TEXTINPUT:
+        case SDL_EVENT_TEXT_INPUT:
         {
             if (ImGui_ImplSDL2_GetViewportForWindowID(event->text.windowID) == NULL)
                 return false;
@@ -404,18 +404,18 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
             io.AddInputCharactersUTF8(event->text.text);
             return true;
         }
-        case SDL_KEYDOWN:
-        case SDL_KEYUP:
+        case SDL_EVENT_KEY_DOWN:
+        case SDL_EVENT_KEY_UP:
         {
             if (ImGui_ImplSDL2_GetViewportForWindowID(event->key.windowID) == NULL)
                 return false;
             ImGui_ImplSDL2_UpdateKeyModifiers((SDL_Keymod)event->key.keysym.mod);
             ImGuiKey key = ImGui_ImplSDL2_KeyEventToImGuiKey(event->key.keysym.sym, event->key.keysym.scancode);
-            io.AddKeyEvent(key, (event->type == SDL_KEYDOWN));
+            io.AddKeyEvent(key, (event->type == SDL_EVENT_KEY_DOWN));
             io.SetKeyEventNativeData(key, event->key.keysym.sym, event->key.keysym.scancode, event->key.keysym.scancode); // To support legacy indexing (<1.87 user code). Legacy backend uses SDLK_*** as indices to IsKeyXXX() functions.
             return true;
         }
-        case SDL_WINDOWEVENT_FOCUS_LOST:
+        case SDL_EVENT_WINDOW_FOCUS_LOST:
             ImGui::GetIO().ClearPreEditText();
             return true;
         case SDL_WINDOWEVENT:
@@ -424,28 +424,28 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
                 return false;
             // - When capturing mouse, SDL will send a bunch of conflicting LEAVE/ENTER event on every mouse move, but the final ENTER tends to be right.
             // - However we won't get a correct LEAVE event for a captured window.
-            // - In some cases, when detaching a window from main viewport SDL may send SDL_WINDOWEVENT_ENTER one frame too late,
-            //   causing SDL_WINDOWEVENT_LEAVE on previous frame to interrupt drag operation by clear mouse position. This is why
-            //   we delay process the SDL_WINDOWEVENT_LEAVE events by one frame. See issue #5012 for details.
+            // - In some cases, when detaching a window from main viewport SDL may send SDL_EVENT_WINDOW_MOUSE_ENTER one frame too late,
+            //   causing SDL_EVENT_WINDOW_MOUSE_LEAVE on previous frame to interrupt drag operation by clear mouse position. This is why
+            //   we delay process the SDL_EVENT_WINDOW_MOUSE_LEAVE events by one frame. See issue #5012 for details.
             Uint8 window_event = event->window.event;
-            if (window_event == SDL_WINDOWEVENT_ENTER)
+            if (window_event == SDL_EVENT_WINDOW_MOUSE_ENTER)
             {
                 bd->MouseWindowID = event->window.windowID;
                 bd->MouseLastLeaveFrame = 0;
             }
-            if (window_event == SDL_WINDOWEVENT_LEAVE)
+            if (window_event == SDL_EVENT_WINDOW_MOUSE_LEAVE)
             {
                 bd->MouseLastLeaveFrame = ImGui::GetFrameCount() + 1;
                 ImGui::GetIO().ClearPreEditText();
             }
-            if (window_event == SDL_WINDOWEVENT_FOCUS_GAINED)
+            if (window_event == SDL_EVENT_WINDOW_FOCUS_GAINED)
                 io.AddFocusEvent(true);
-            else if (event->window.event == SDL_WINDOWEVENT_FOCUS_LOST)
+            else if (event->window.event == SDL_EVENT_WINDOW_FOCUS_LOST)
                 io.AddFocusEvent(false);
                 ImGui::GetIO().ClearPreEditText();
             return true;
         }
-        case SDL_TEXTEDITING: {
+        case SDL_EVENT_TEXT_EDITING: {
             if(strlen(event->edit.text) > 0)
             {
                 ImGui::GetIO().SetPreEditText(event->edit.text);
@@ -457,7 +457,7 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
             break;
         }
 #if defined(SDL_HINT_IME_SUPPORT_EXTENDED_TEXT)
-        case SDL_TEXTEDITING_EXT: {
+        case SDL_EVENT_TEXT_EDITING_EXT: {
             if( event->editExt.text != nullptr && strlen(event->editExt.text) > 0)
             {
                 ImGui::GetIO().SetPreEditText( event->editExt.text );
@@ -468,8 +468,8 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
             break;
         }
 #endif
-        case SDL_CONTROLLERDEVICEADDED:
-        case SDL_CONTROLLERDEVICEREMOVED:
+        case SDL_EVENT_GAMEPAD_ADDED:
+        case SDL_EVENT_GAMEPAD_REMOVED:
         {
             bd->WantUpdateGamepadsList = true;
             return true;
@@ -525,15 +525,15 @@ static bool ImGui_ImplSDL2_Init(SDL_Window* window, SDL_Renderer* renderer, void
     bd->WantUpdateGamepadsList = true;
 
     // Load mouse cursors
-    bd->MouseCursors[ImGuiMouseCursor_Arrow] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
-    bd->MouseCursors[ImGuiMouseCursor_TextInput] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_IBEAM);
-    bd->MouseCursors[ImGuiMouseCursor_ResizeAll] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEALL);
-    bd->MouseCursors[ImGuiMouseCursor_ResizeNS] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENS);
-    bd->MouseCursors[ImGuiMouseCursor_ResizeEW] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEWE);
-    bd->MouseCursors[ImGuiMouseCursor_ResizeNESW] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENESW);
-    bd->MouseCursors[ImGuiMouseCursor_ResizeNWSE] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENWSE);
-    bd->MouseCursors[ImGuiMouseCursor_Hand] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
-    bd->MouseCursors[ImGuiMouseCursor_NotAllowed] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NO);
+    bd->MouseCursors[ImGuiMouseCursor_Arrow] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT);
+    bd->MouseCursors[ImGuiMouseCursor_TextInput] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_TEXT);
+    bd->MouseCursors[ImGuiMouseCursor_ResizeAll] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_MOVE);
+    bd->MouseCursors[ImGuiMouseCursor_ResizeNS] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NS_RESIZE);
+    bd->MouseCursors[ImGuiMouseCursor_ResizeEW] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_EW_RESIZE);
+    bd->MouseCursors[ImGuiMouseCursor_ResizeNESW] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NESW_RESIZE);
+    bd->MouseCursors[ImGuiMouseCursor_ResizeNWSE] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NWSE_RESIZE);
+    bd->MouseCursors[ImGuiMouseCursor_Hand] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_POINTER);
+    bd->MouseCursors[ImGuiMouseCursor_NotAllowed] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NOT_ALLOWED);
 
     // Set platform dependent data in viewport
     // Our mouse update function expect PlatformHandle to be filled for the main viewport
@@ -544,9 +544,9 @@ static bool ImGui_ImplSDL2_Init(SDL_Window* window, SDL_Renderer* renderer, void
     SDL_VERSION(&info.version);
     if (SDL_GetWindowWMInfo(window, &info))
     {
-#if defined(SDL_VIDEO_DRIVER_WINDOWS)
+#if defined(SDL_VIDEO_DRIVER_WINDOWS /* SDL_VIDEO_DRIVER_WINDOWS has been removed in SDL3 */)
         main_viewport->PlatformHandleRaw = (void*)info.info.win.window;
-#elif defined(__APPLE__) && defined(SDL_VIDEO_DRIVER_COCOA)
+#elif defined(SDL_PLATFORM_APPLE) && defined(SDL_VIDEO_DRIVER_COCOA /* SDL_VIDEO_DRIVER_COCOA has been removed in SDL3 */)
         main_viewport->PlatformHandleRaw = (void*)info.info.cocoa.window;
 #endif
     }
@@ -555,7 +555,7 @@ static bool ImGui_ImplSDL2_Init(SDL_Window* window, SDL_Renderer* renderer, void
     // Without this, when clicking to gain focus, our widgets wouldn't activate even though they showed as hovered.
     // (This is unfortunately a global SDL setting, so enabling it might have a side-effect on your application.
     // It is unlikely to make a difference, but if your app absolutely needs to ignore the initial on-focus click:
-    // you can ignore SDL_MOUSEBUTTONDOWN events coming right after a SDL_WINDOWEVENT_FOCUS_GAINED)
+    // you can ignore SDL_EVENT_MOUSE_BUTTON_DOWN events coming right after a SDL_EVENT_WINDOW_FOCUS_GAINED)
 #ifdef SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH
     SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
 #endif
@@ -623,7 +623,7 @@ void ImGui_ImplSDL2_Shutdown()
     if (bd->ClipboardTextData)
         SDL_free(bd->ClipboardTextData);
     for (ImGuiMouseCursor cursor_n = 0; cursor_n < ImGuiMouseCursor_COUNT; cursor_n++)
-        SDL_FreeCursor(bd->MouseCursors[cursor_n]);
+        SDL_DestroyCursor(bd->MouseCursors[cursor_n]);
     ImGui_ImplSDL2_CloseGamepads();
 
     io.BackendPlatformName = nullptr;
@@ -637,10 +637,10 @@ static void ImGui_ImplSDL2_UpdateMouseData(float x_scale, float y_scale)
     ImGui_ImplSDL2_Data* bd = ImGui_ImplSDL2_GetBackendData();
     ImGuiIO& io = ImGui::GetIO();
 
-    // We forward mouse input when hovered or captured (via SDL_MOUSEMOTION) or when focused (below)
+    // We forward mouse input when hovered or captured (via SDL_EVENT_MOUSE_MOTION) or when focused (below)
 #if SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE
     // SDL_CaptureMouse() let the OS know e.g. that our imgui drag outside the SDL window boundaries shouldn't e.g. trigger other operations outside
-    SDL_CaptureMouse((bd->MouseButtonsDown != 0) ? SDL_TRUE : SDL_FALSE);
+    SDL_CaptureMouse((bd->MouseButtonsDown != 0) ? true : false);
     SDL_Window* focused_window = SDL_GetKeyboardFocus();
     const bool is_app_focused = (bd->Window == focused_window);
 #else
@@ -652,7 +652,7 @@ static void ImGui_ImplSDL2_UpdateMouseData(float x_scale, float y_scale)
         if (io.WantSetMousePos)
             SDL_WarpMouseInWindow(bd->Window, (int)io.MousePos.x, (int)io.MousePos.y);
 
-        // (Optional) Fallback to provide mouse position when focused (SDL_MOUSEMOTION already provides this when hovered or captured)
+        // (Optional) Fallback to provide mouse position when focused (SDL_EVENT_MOUSE_MOTION already provides this when hovered or captured)
         if (bd->MouseCanUseGlobalState && bd->MouseButtonsDown == 0)
         {
             int window_x, window_y, mouse_x_global, mouse_y_global;
@@ -674,7 +674,7 @@ static void ImGui_ImplSDL2_UpdateMouseCursor()
     if (io.MouseDrawCursor || imgui_cursor == ImGuiMouseCursor_None)
     {
         // Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
-        SDL_ShowCursor(SDL_FALSE);
+        SDL_ShowCursor(false);
     }
     else
     {
@@ -685,7 +685,7 @@ static void ImGui_ImplSDL2_UpdateMouseCursor()
             SDL_SetCursor(expected_cursor); // SDL function doesn't have an early out (see #6113)
             bd->MouseLastCursor = expected_cursor;
         }
-        SDL_ShowCursor(SDL_TRUE);
+        SDL_ShowCursor(true);
     }
 }
 
@@ -693,8 +693,8 @@ static void ImGui_ImplSDL2_CloseGamepads()
 {
     ImGui_ImplSDL2_Data* bd = ImGui_ImplSDL2_GetBackendData();
     if (bd->GamepadMode != ImGui_ImplSDL2_GamepadMode_Manual)
-        for (SDL_GameController* gamepad : bd->Gamepads)
-            SDL_GameControllerClose(gamepad);
+        for (SDL_Gamepad* gamepad : bd->Gamepads)
+            SDL_CloseGamepad(gamepad);
     bd->Gamepads.resize(0);
 }
 
@@ -716,21 +716,21 @@ void ImGui_ImplSDL2_SetGamepadMode(ImGui_ImplSDL2_GamepadMode mode, struct _SDL_
     bd->GamepadMode = mode;
 }
 
-static void ImGui_ImplSDL2_UpdateGamepadButton(ImGui_ImplSDL2_Data* bd, ImGuiIO& io, ImGuiKey key, SDL_GameControllerButton button_no)
+static void ImGui_ImplSDL2_UpdateGamepadButton(ImGui_ImplSDL2_Data* bd, ImGuiIO& io, ImGuiKey key, SDL_GamepadButton button_no)
 {
     bool merged_value = false;
-    for (SDL_GameController* gamepad : bd->Gamepads)
-        merged_value |= SDL_GameControllerGetButton(gamepad, button_no) != 0;
+    for (SDL_Gamepad* gamepad : bd->Gamepads)
+        merged_value |= SDL_GetGamepadButton(gamepad, button_no) != 0;
     io.AddKeyEvent(key, merged_value);
 }
 
 static inline float Saturate(float v) { return v < 0.0f ? 0.0f : v  > 1.0f ? 1.0f : v; }
-static void ImGui_ImplSDL2_UpdateGamepadAnalog(ImGui_ImplSDL2_Data* bd, ImGuiIO& io, ImGuiKey key, SDL_GameControllerAxis axis_no, float v0, float v1)
+static void ImGui_ImplSDL2_UpdateGamepadAnalog(ImGui_ImplSDL2_Data* bd, ImGuiIO& io, ImGuiKey key, SDL_GamepadAxis axis_no, float v0, float v1)
 {
     float merged_value = 0.0f;
-    for (SDL_GameController* gamepad : bd->Gamepads)
+    for (SDL_Gamepad* gamepad : bd->Gamepads)
     {
-        float vn = Saturate((float)(SDL_GameControllerGetAxis(gamepad, axis_no) - v0) / (float)(v1 - v0));
+        float vn = Saturate((float)(SDL_GetGamepadAxis(gamepad, axis_no) - v0) / (float)(v1 - v0));
         if (merged_value < vn)
             merged_value = vn;
     }
@@ -748,8 +748,8 @@ static void ImGui_ImplSDL2_UpdateGamepads()
         ImGui_ImplSDL2_CloseGamepads();
         int joystick_count = SDL_NumJoysticks();
         for (int n = 0; n < joystick_count; n++)
-            if (SDL_IsGameController(n))
-                if (SDL_GameController* gamepad = SDL_GameControllerOpen(n))
+            if (SDL_IsGamepad(n))
+                if (SDL_Gamepad* gamepad = SDL_OpenGamepad(n))
                 {
                     bd->Gamepads.push_back(gamepad);
                     if (bd->GamepadMode == ImGui_ImplSDL2_GamepadMode_AutoFirst)
@@ -768,30 +768,30 @@ static void ImGui_ImplSDL2_UpdateGamepads()
 
     // Update gamepad inputs
     const int thumb_dead_zone = 8000; // SDL_gamecontroller.h suggests using this value.
-    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadStart,       SDL_CONTROLLER_BUTTON_START);
-    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadBack,        SDL_CONTROLLER_BUTTON_BACK);
-    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadFaceLeft,    SDL_CONTROLLER_BUTTON_X);              // Xbox X, PS Square
-    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadFaceRight,   SDL_CONTROLLER_BUTTON_B);              // Xbox B, PS Circle
-    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadFaceUp,      SDL_CONTROLLER_BUTTON_Y);              // Xbox Y, PS Triangle
-    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadFaceDown,    SDL_CONTROLLER_BUTTON_A);              // Xbox A, PS Cross
-    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadDpadLeft,    SDL_CONTROLLER_BUTTON_DPAD_LEFT);
-    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadDpadRight,   SDL_CONTROLLER_BUTTON_DPAD_RIGHT);
-    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadDpadUp,      SDL_CONTROLLER_BUTTON_DPAD_UP);
-    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadDpadDown,    SDL_CONTROLLER_BUTTON_DPAD_DOWN);
-    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadL1,          SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
-    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadR1,          SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
-    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadL2,          SDL_CONTROLLER_AXIS_TRIGGERLEFT,  0.0f, 32767);
-    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadR2,          SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 0.0f, 32767);
-    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadL3,          SDL_CONTROLLER_BUTTON_LEFTSTICK);
-    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadR3,          SDL_CONTROLLER_BUTTON_RIGHTSTICK);
-    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadLStickLeft,  SDL_CONTROLLER_AXIS_LEFTX,  -thumb_dead_zone, -32768);
-    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadLStickRight, SDL_CONTROLLER_AXIS_LEFTX,  +thumb_dead_zone, +32767);
-    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadLStickUp,    SDL_CONTROLLER_AXIS_LEFTY,  -thumb_dead_zone, -32768);
-    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadLStickDown,  SDL_CONTROLLER_AXIS_LEFTY,  +thumb_dead_zone, +32767);
-    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadRStickLeft,  SDL_CONTROLLER_AXIS_RIGHTX, -thumb_dead_zone, -32768);
-    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadRStickRight, SDL_CONTROLLER_AXIS_RIGHTX, +thumb_dead_zone, +32767);
-    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadRStickUp,    SDL_CONTROLLER_AXIS_RIGHTY, -thumb_dead_zone, -32768);
-    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadRStickDown,  SDL_CONTROLLER_AXIS_RIGHTY, +thumb_dead_zone, +32767);
+    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadStart,       SDL_GAMEPAD_BUTTON_START);
+    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadBack,        SDL_GAMEPAD_BUTTON_BACK);
+    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadFaceLeft,    SDL_GAMEPAD_BUTTON_WEST);              // Xbox X, PS Square
+    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadFaceRight,   SDL_GAMEPAD_BUTTON_EAST);              // Xbox B, PS Circle
+    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadFaceUp,      SDL_GAMEPAD_BUTTON_NORTH);              // Xbox Y, PS Triangle
+    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadFaceDown,    SDL_GAMEPAD_BUTTON_SOUTH);              // Xbox A, PS Cross
+    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadDpadLeft,    SDL_GAMEPAD_BUTTON_DPAD_LEFT);
+    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadDpadRight,   SDL_GAMEPAD_BUTTON_DPAD_RIGHT);
+    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadDpadUp,      SDL_GAMEPAD_BUTTON_DPAD_UP);
+    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadDpadDown,    SDL_GAMEPAD_BUTTON_DPAD_DOWN);
+    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadL1,          SDL_GAMEPAD_BUTTON_LEFT_SHOULDER);
+    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadR1,          SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER);
+    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadL2,          SDL_GAMEPAD_AXIS_LEFT_TRIGGER,  0.0f, 32767);
+    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadR2,          SDL_GAMEPAD_AXIS_RIGHT_TRIGGER, 0.0f, 32767);
+    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadL3,          SDL_GAMEPAD_BUTTON_LEFT_STICK);
+    ImGui_ImplSDL2_UpdateGamepadButton(bd, io, ImGuiKey_GamepadR3,          SDL_GAMEPAD_BUTTON_RIGHT_STICK);
+    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadLStickLeft,  SDL_GAMEPAD_AXIS_LEFTX,  -thumb_dead_zone, -32768);
+    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadLStickRight, SDL_GAMEPAD_AXIS_LEFTX,  +thumb_dead_zone, +32767);
+    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadLStickUp,    SDL_GAMEPAD_AXIS_LEFTY,  -thumb_dead_zone, -32768);
+    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadLStickDown,  SDL_GAMEPAD_AXIS_LEFTY,  +thumb_dead_zone, +32767);
+    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadRStickLeft,  SDL_GAMEPAD_AXIS_RIGHTX, -thumb_dead_zone, -32768);
+    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadRStickRight, SDL_GAMEPAD_AXIS_RIGHTX, +thumb_dead_zone, +32767);
+    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadRStickUp,    SDL_GAMEPAD_AXIS_RIGHTY, -thumb_dead_zone, -32768);
+    ImGui_ImplSDL2_UpdateGamepadAnalog(bd, io, ImGuiKey_GamepadRStickDown,  SDL_GAMEPAD_AXIS_RIGHTY, +thumb_dead_zone, +32767);
 }
 
 void ImGui_ImplSDL2_NewFrame()
@@ -809,7 +809,7 @@ void ImGui_ImplSDL2_NewFrame()
     if (SDL_GetWindowFlags(bd->Window) & SDL_WINDOW_MINIMIZED)
         w = h = 0;
     if (bd->Renderer != nullptr)
-        SDL_GetRendererOutputSize(bd->Renderer, &display_w, &display_h);
+        SDL_GetCurrentRenderOutputSize(bd->Renderer, &display_w, &display_h);
 #if SDL_HAS_VULKAN
     else if (SDL_GetWindowFlags(bd->Window) & SDL_WINDOW_VULKAN)
         SDL_Vulkan_GetDrawableSize(bd->Window, &display_w, &display_h);
